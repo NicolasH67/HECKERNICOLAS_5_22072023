@@ -85,12 +85,17 @@ final class Calculator {
         // Verification
         
         guard expressionIsCorrect else {
-            delegate?.displayAlert(message: "expressionIsNotCorrect")
+            delegate?.displayAlert(message: "le calcul n'est pas correct")
             return
         }
         
         guard expressionHaveEnoughElement else {
-            delegate?.displayAlert(message: "expressionDontHaveEnoughElement")
+            delegate?.displayAlert(message: "le calcul n'est pas complet")
+            return
+        }
+        
+        guard !expressionHaveResult else {
+            delegate?.displayAlert(message: "L'expression à deja un résultat, tappez un nouveau calcule")
             return
         }
         
@@ -136,34 +141,35 @@ final class Calculator {
      - Parameter expression: The array of expression elements. Type : [String]
      - Returns: The result of the highest priority operation. Type : Double
     */
-    private func priorityCalculate(expression: [String]) -> Double {
-        let result: Double = 0.0
+    func priorityCalculate(expression: [String]) -> Double {
+        var result: Double = 0.0
+        
         if !expression.contains("+") && !expression.contains("-") {
-            if let result = formCalculation(expression: expression, index: 1) {
-                return result
+            if let expressioResult = formCalculation(expression: expression, index: 1) {
+                result = expressioResult
             }
-        } else if expression.contains("+") || expression.contains("-") && expression.contains("x") && expression.contains("÷") {
+        } else if (expression.contains("+") || expression.contains("-")) && (expression.contains("x") && expression.contains("÷")) {
             if let indexMultiplication = expression.firstIndex(of: "x"), let indexDivision = expression.firstIndex(of: "÷") {
                 let index = min(indexMultiplication, indexDivision)
-                if let result = formCalculation(expression: expression, index: index) {
-                    return result
+                if let expressioResult = formCalculation(expression: expression, index: index) {
+                    result = expressioResult
                 }
             }
         } else if expression.contains("x") {
             if let index = expression.firstIndex(of: "x") {
-                if let result = formCalculation(expression: expression, index: index) {
-                    return result
+                if let expressioResult = formCalculation(expression: expression, index: index) {
+                    result = expressioResult
                 }
             }
         } else if expression.contains("÷") {
             if let index = expression.firstIndex(of: "÷") {
-                if let result = formCalculation(expression: expression, index: index) {
-                    return result
+                if let expressioResult = formCalculation(expression: expression, index: index) {
+                    result = expressioResult
                 }
             }
         } else {
-            if let result = formCalculation(expression: expression, index: 1) {
-                return result
+            if let expressioResult = formCalculation(expression: expression, index: 1) {
+                result = expressioResult
             }
         }
         return result
@@ -177,11 +183,11 @@ final class Calculator {
         - result: The result of the processed operation. Type : Double
      - Returns: The modified expression array. Type [String]
     */
-    private func removeElement(expression: inout [String], result: Double) -> [String]{
+    func removeElement(expression: inout [String], result: Double) -> [String]{
         if !expression.contains("+") && !expression.contains("-") {
             expression = Array(expression.dropFirst(3))
             expression.insert("\(result)", at: 0)
-        } else if expression.contains("+") || expression.contains("-") && expression.contains("x") && expression.contains("÷") {
+        } else if (expression.contains("+") || expression.contains("-")) && (expression.contains("x") && expression.contains("÷")) {
             if let indexMultiplication = expression.firstIndex(of: "x"), let indexDivision = expression.firstIndex(of: "÷") {
                 let index = min(indexMultiplication, indexDivision)
                 updateExpression(&expression, atIndex: index, withResult: result)
@@ -210,20 +216,20 @@ final class Calculator {
      - Returns: The result of the calculation.
     */
     func formCalculation(expression: [String], index: Int) -> Double? {
-        guard let left = Double(expression[index - 1]), let right = Double(expression[index + 1]) else {
-            return nil
+        if let left = Double(expression[index - 1]), let right = Double(expression[index + 1]) {
+            let operand = expression[index]
+            let result = calcul(left: left, operand: operand, right: right)
+            
+            return result
         }
-        let operand = expression[index]
-        let result = calcul(left: left, operand: operand, right: right)
-        
-        return result
+        return nil
     }
     
     /**
      Updates the expression array after a processed operation with the result.
      
      - Parameters:
-        - expression: The inout array of expression elements. Type : [String]
+        - expression: The INOUT array of expression elements. Type : [String]
         - index: The index indicating the position of the operator. Type : Int
         - result: The result of the processed operation. Type : Double
      */

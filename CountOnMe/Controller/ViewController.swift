@@ -49,6 +49,8 @@ class ViewController: UIViewController, CalculatorDelegate {
     */
     @IBOutlet weak var textView: UITextView!
     
+    // MARK: - Properties
+    
     /**
      An instance of the Calculator class used for performing calculations and managing related functionality.
     */
