@@ -24,7 +24,11 @@ final class Calculator {
     var delegate: CalculatorDelegate?
     
     /// The current text representing the user's input and calculated expression.
-    var text: String = ""
+    var text: String = "" {
+        didSet {
+            delegate?.updateDisplay(text: text)
+        }
+    }
     
     /// An array of elements obtained by splitting the 'text' at spaces.
     var elements: [String] {
@@ -38,7 +42,7 @@ final class Calculator {
     
     /// Checks if an operator can be added to the expression.
     var canAddOperator: Bool {
-        return elements.last != "+" && elements.last != "-"
+        return elements.last != "+" && elements.last != "-" && elements.last != "x" && elements.last != "÷"
     }
     
     /// Checks if the expression contains a result.
@@ -48,7 +52,7 @@ final class Calculator {
     
     /// Checks if the expression is currently correct and can be evaluated.
     var expressionIsCorrect: Bool {
-        return (elements.last != "+") && (elements.last != "-")
+        return (elements.last != "+") && (elements.last != "-") && (elements.last != "x") && (elements.last != "÷")
     }
     
     // MARK: - Methods
@@ -59,22 +63,24 @@ final class Calculator {
             text = ""
         }
         text.append(number)
-        delegate?.updateDisplay(text: text)
     }
     
     /// Handles the tap event on an operator button
     func tappedOperatorButton(_ mathOperator: String) {
         if canAddOperator {
             text.append(" \(mathOperator) ")
-            delegate?.updateDisplay(text: text)
         } else {
-            delegate?.displayAlert(message: "Un operateur est déja mis !")
+            delegate?.displayAlert(message: "Un operateur est déjà mis !")
         }
     }
     
     /// Handles the tap event on the equal button
     func tappedEqualButton() {
         evaluateExpression()
+    }
+    
+    func tappedResetButton() {
+        text = ""
     }
     
     /// Evaluate the expression and updates the display
@@ -101,16 +107,17 @@ final class Calculator {
         
         // Iterate over operations while an operand still here
         while operationsToReduce.count > 1 {
-            var result: Double = 0.0
-            
             print(operationsToReduce)
-            result = priorityCalculate(expression: operationsToReduce)
             
-            operationsToReduce = removeElement(expression: &operationsToReduce, result: result)
+            operationsToReduce = priorityCalculate(expression: operationsToReduce)
+            if operationsToReduce.count > 2 {
+                if let result = formCalculation(expression: operationsToReduce, index: 1) {
+                    updateExpression(&operationsToReduce, atIndex: 1, withResult: result)
+                }
+            }
         }
         text.append(" = ")
         text.append(operationsToReduce[0])
-        delegate?.updateDisplay(text: text)
     }
         
     /**
@@ -123,14 +130,14 @@ final class Calculator {
      
      - Returns: The result of the operation. Type : Double
      */
-    private func calcul(left: Double, operand: String, right: Double) -> Double {
+    private func calcul(left: Double, operand: String, right: Double) -> Double? {
         var result: Double
         switch operand {
         case "x": result = left * right
         case "÷": result = left / right
         case "+": result = left + right
         case "-": result = left - right
-        default: fatalError("Unknown operator !")
+        default: return nil
         }
         return result
     }
@@ -139,70 +146,17 @@ final class Calculator {
     Calculates the result of the highest priority operation in the expression.
      
      - Parameter expression: The array of expression elements. Type : [String]
-     - Returns: The result of the highest priority operation. Type : Double
+     - Returns: The array with the updated expression after performing the highest priority operation.
     */
-    func priorityCalculate(expression: [String]) -> Double {
-        var result: Double = 0.0
+    func priorityCalculate(expression: [String]) -> [String] {
+        var expression = expression
         
-        if !expression.contains("+") && !expression.contains("-") {
-            if let expressioResult = formCalculation(expression: expression, index: 1) {
-                result = expressioResult
-            }
-        } else if (expression.contains("+") || expression.contains("-")) && (expression.contains("x") && expression.contains("÷")) {
-            if let indexMultiplication = expression.firstIndex(of: "x"), let indexDivision = expression.firstIndex(of: "÷") {
-                let index = min(indexMultiplication, indexDivision)
-                if let expressioResult = formCalculation(expression: expression, index: index) {
-                    result = expressioResult
+        while expression.contains("x") || expression.contains("÷") {
+            if let index = expression.firstIndex(where: { $0 == "x" || $0 == "÷" }) {
+                if let result = formCalculation(expression: expression, index: index) {
+                    updateExpression(&expression, atIndex: index, withResult: result)
                 }
             }
-        } else if expression.contains("x") {
-            if let index = expression.firstIndex(of: "x") {
-                if let expressioResult = formCalculation(expression: expression, index: index) {
-                    result = expressioResult
-                }
-            }
-        } else if expression.contains("÷") {
-            if let index = expression.firstIndex(of: "÷") {
-                if let expressioResult = formCalculation(expression: expression, index: index) {
-                    result = expressioResult
-                }
-            }
-        } else {
-            if let expressioResult = formCalculation(expression: expression, index: 1) {
-                result = expressioResult
-            }
-        }
-        return result
-    }
-        
-    /**
-     Removes the elements of a processed operation and inserts the result into the expression.
-     
-     - Parameters:
-        - expression: The inout array of expression elements. Type : [String]
-        - result: The result of the processed operation. Type : Double
-     - Returns: The modified expression array. Type [String]
-    */
-    func removeElement(expression: inout [String], result: Double) -> [String]{
-        if !expression.contains("+") && !expression.contains("-") {
-            expression = Array(expression.dropFirst(3))
-            expression.insert("\(result)", at: 0)
-        } else if (expression.contains("+") || expression.contains("-")) && (expression.contains("x") && expression.contains("÷")) {
-            if let indexMultiplication = expression.firstIndex(of: "x"), let indexDivision = expression.firstIndex(of: "÷") {
-                let index = min(indexMultiplication, indexDivision)
-                updateExpression(&expression, atIndex: index, withResult: result)
-            }
-        } else if expression.contains("x") {
-            if let index = expression.firstIndex(of: "x") {
-                updateExpression(&expression, atIndex: index, withResult: result)
-            }
-        } else if expression.contains("÷"){
-            if let index = expression.firstIndex(of: "÷") {
-                updateExpression(&expression, atIndex: index, withResult: result)
-            }
-        } else {
-            expression = Array(expression.dropFirst(3))
-            expression.insert("\(result)", at: 0)
         }
         return expression
     }

@@ -13,82 +13,120 @@ import XCTest
  A test case class for testing the Calculator class functionality.
  */
 final class CalculatorTestCase: XCTestCase {
-    var calculator = Calculator()
     
-    /**
-         Helper method for testing calculations.
-         
-         - Parameters:
-            - expression: The mathematical expression to calculate. Type : [String]
-            - result: The expected result of the calculation. Type : Double
-         */
-    func calcul(expression: [String], result: Double) {
-        var operationToReduce = expression
-        var resultOfExpression: Double = 0.0
+    //MARK: - Properties
+    
+    var calculator: Calculator!
+    var spy: CalculatorDelegateSpy!
+    
+    //MARK: - Override
+    
+    override func setUp() {
+        super.setUp()
+        calculator = Calculator()
+        spy = CalculatorDelegateSpy()
+        calculator.delegate = spy
+    }
+    
+    //MARK: - Methode
+    
+    func simpleCalcul(operand: String, result: Double) {
+        calculator.tappedNumberButton("1")
+        calculator.tappedNumberButton("5")
+        calculator.tappedOperatorButton(operand)
+        calculator.tappedNumberButton("5")
+        calculator.tappedEqualButton()
         
-        while operationToReduce.count > 1 {
-            
-            print(operationToReduce)
-            resultOfExpression = calculator.priorityCalculate(expression: operationToReduce)
-            
-            operationToReduce = calculator.removeElement(expression: &operationToReduce, result: resultOfExpression)
-        }
-        XCTAssertEqual(resultOfExpression, result)
+        XCTAssertEqual(calculator.text, "15 \(operand) 5 = \(result)")
+    }
+    
+    func complexeCalcul(operand: String, result: Double) {
+        calculator.tappedNumberButton("5")
+        calculator.tappedOperatorButton("+")
+        calculator.tappedNumberButton("5")
+        calculator.tappedOperatorButton(operand)
+        calculator.tappedNumberButton("5")
+        calculator.tappedEqualButton()
+        
+        XCTAssertEqual(calculator.text, "5 + 5 \(operand) 5 = \(result)")
     }
     
     func testCalculate15Plus5_WhenAdding_ThenResultIs20() {
-        calcul(expression: ["15", "+", "5"], result: 20.0)
+        simpleCalcul(operand: "+", result: 20.0)
     }
 
     func testCalculate15Subtract5_WhenSubtracting_ThenResultIs10() {
-        calcul(expression: ["15", "-", "5"], result: 10.0)
-    }
-    
-    func testCalculate15Multiply5_WhenMultiplying_ThenResultIs75() {
-        calcul(expression: ["15", "x", "5"], result: 75.0)
-    }
-    
-    func testCalculate15Divide5_WhenDividing_ThenResultIs3() {
-        calcul(expression: ["15", "÷", "5"], result: 3.0)
-    }
-    
-    func testCalculate5Plus5Multiply5_WhenCorrectlyCalculating_ThenResultIs30() {
-        calcul(expression: ["5", "+", "5", "x", "5"], result: 30.0)
-    }
-    
-    func testCalculate5Plus5Divide5_WhenCorrectlyCalculating_ThenResultIs6() {
-        calcul(expression: ["5", "+", "5", "÷", "5"], result: 6.0)
+        simpleCalcul(operand: "-", result: 10.0)
     }
 
-    func testComplexCalculation_WhenCorrectlyCalculating_ThenResultIs22() {
-        calcul(expression: ["4", "x", "2", "+", "7", "x", "2"], result: 22.0)
+    func testCalculate15Multiply5_WhenMultiplying_ThenResultIs75() {
+        simpleCalcul(operand: "x", result: 75.0)
+    }
+
+    func testCalculate15Divide5_WhenDividing_ThenResultIs3() {
+        simpleCalcul(operand: "÷", result: 3.0)
+    }
+
+    func testCalculate5Plus5Multiply5_WhenCorrectlyCalculating_ThenResultIs30() {
+        complexeCalcul(operand: "x", result: 30.0)
+    }
+
+    func testCalculate5Plus5Divide5_WhenCorrectlyCalculating_ThenResultIs6() {
+        complexeCalcul(operand: "÷", result: 6.0)
     }
 
     func testCalculationWithDivisionAndMultiplication_WhenCorrectlyCalculating_ThenResultIs20() {
-        calcul(expression: ["5", "+", "6", "÷", "2", "x", "5"], result: 20.0)
+        calculator.tappedNumberButton("5")
+        calculator.tappedOperatorButton("+")
+        calculator.tappedNumberButton("6")
+        calculator.tappedOperatorButton("÷")
+        calculator.tappedNumberButton("2")
+        calculator.tappedOperatorButton("x")
+        calculator.tappedNumberButton("5")
+        calculator.tappedEqualButton()
+    
+        XCTAssertEqual(calculator.text, "5 + 6 ÷ 2 x 5 = 20.0")
     }
     
-    func testExpressionIsCorrect_WhenVerifyingIsCorrect_ThenBoolIsTrue() {
-        let expressionIsCorrect = calculator.expressionIsCorrect
+    func testGivenHaveExpression_WhenWantReset_ThenTextIsReset() {
+        calculator.tappedNumberButton("2")
+        calculator.tappedOperatorButton("x")
+        calculator.tappedNumberButton("5")
+        calculator.tappedResetButton()
         
-        XCTAssertTrue(expressionIsCorrect)
-    }
-    
-    func testExpressionHaveEnoughElement_WhenVerifyingIsCorrect_ThenBoolIsFalse() {
-        let expressionIsCorrect = calculator.expressionHaveEnoughElement
-        
-        XCTAssertFalse(expressionIsCorrect)
+        XCTAssertEqual(calculator.text, "")
     }
 
-    func testExpressionHaveResult_WhenVerifyingHaveResult_ThenBoolIsFalse() {
-        let expressionHaveResult = calculator.expressionHaveResult
+    func testGivenInvalidExpression_WhenEvaluatingExpression_ThenErrorMessageDisplayed() {
+        calculator.text = "5 + 5 +"
         
-        XCTAssertFalse(expressionHaveResult)
+        calculator.tappedEqualButton()
+        
+        XCTAssertEqual(spy.displayedMessages, ["le calcul n'est pas correct"])
     }
 
-    func testCanAddOperator_WhenVerifyingCanAddOperator_ThenBoolIsTrue() {
-        let expressionHaveResult = calculator.canAddOperator
+    func testGivenIncompleteExpression_WhenEvaluatingExpression_ThenIncompleteExpressionMessageDisplayed() {
+        calculator.tappedNumberButton("6")
         
-        XCTAssertTrue(expressionHaveResult)
+        calculator.tappedEqualButton()
+        
+        XCTAssertEqual(spy.displayedMessages, ["le calcul n'est pas complet"])
+    }
+
+    func testGivenExpressionWithResult_WhenEvaluatingExpression_ThenExistingResultMessageDisplayed() {
+        calculator.text = "5 + 3 = 8"
+        
+        calculator.tappedEqualButton()
+        
+        XCTAssertEqual(spy.displayedMessages, ["L'expression à deja un résultat, tappez un nouveau calcule"])
+    }
+
+    func testGivenOperatorAlreadyPresent_WhenAddingOperator_ThenErrorMessageDisplayed() {
+        calculator.tappedOperatorButton("+")
+        calculator.tappedOperatorButton("-")
+
+        XCTAssertEqual(calculator.text, " + ")
+
+        XCTAssertEqual(spy.displayedMessages, ["Un operateur est déjà mis !"])
     }
 }

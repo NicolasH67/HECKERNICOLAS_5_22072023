@@ -8,37 +8,13 @@
 
 import UIKit
 
-class ViewController: UIViewController, CalculatorDelegate {
+final class ViewController: UIViewController {
     
     // MARK: - viewDidLoad
     
     override func viewDidLoad() {
         super.viewDidLoad()
         calculator.delegate = self
-    }
-    
-    // MARK: - Delegate Pattern
-    
-    /**
-     This method is called to update the content of the text display in a UITextView.
-     
-     - Parameters:
-        - text: The text to be displayed in the UITextView.
-    */
-    func updateDisplay(text: String) {
-        textView.text = text
-    }
-    
-    /**
-     This method is used to display a modal alert with a given message.
-     
-     - Parameters:
-        - message: The message to be displayed in the alert.
-    */
-    func displayAlert(message: String) {
-        let alertVC = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alertVC.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-        return self.present(alertVC, animated: true, completion: nil)
     }
     
     // MARK: - IBOutlet
@@ -91,5 +67,47 @@ class ViewController: UIViewController, CalculatorDelegate {
     @IBAction func tappedEqualButton(_ sender: UIButton) {
         calculator.tappedEqualButton()
     }
+    
+    @IBAction func tappedResetButton(_ sender: Any) {
+        calculator.tappedResetButton()
+    }
+    
 }
 
+// MARK: - Delegate Pattern
+
+extension ViewController: CalculatorDelegate {
+    /**
+     This method is called to update the content of the text display in a UITextView.
+     
+     - Parameters:
+        - text: The text to be displayed in the UITextView.
+    */
+    func updateDisplay(text: String) {
+        textView.text = text
+    }
+    
+    /**
+     This method is used to display a modal alert with a given message.
+     
+     - Parameters:
+        - message: The message to be displayed in the alert.
+    */
+    func displayAlert(message: String) {
+        let alertVC = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alertVC.addAction(UIAlertAction(title: "OK", style: .cancel))
+        present(alertVC, animated: true)
+    }
+}
+
+class CalculatorDelegateSpy: CalculatorDelegate {
+    func updateDisplay(text: String) {
+        print("ok")
+    }
+    
+    private(set) var displayedMessages: [String] = []
+
+    func displayAlert(message: String) {
+        displayedMessages.append(message)
+    }
+}
