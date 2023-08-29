@@ -5,7 +5,7 @@
 //  Created by Nicolas Hecker on 23/07/2023.
 //  Copyright © 2023 Vincent Saluzzo. All rights reserved.
 //
-
+ 
 import Foundation
 
 // MARK: - CalculatorDelegate
@@ -47,12 +47,16 @@ final class Calculator {
     
     /// Checks if the expression contains a result.
     var expressionHaveResult: Bool {
-        return text.firstIndex(of: "=") != nil
+        return elements.firstIndex(of: "=") != nil
     }
     
     /// Checks if the expression is currently correct and can be evaluated.
     var expressionIsCorrect: Bool {
         return (elements.last != "+") && (elements.last != "-") && (elements.last != "x") && (elements.last != "÷")
+    }
+    
+    var expressionDivideZero : Bool {
+        return text.contains("÷ 0")
     }
     
     // MARK: - Methods
@@ -67,11 +71,22 @@ final class Calculator {
     
     /// Handles the tap event on an operator button
     func tappedOperatorButton(_ mathOperator: String) {
-        if canAddOperator {
-            text.append(" \(mathOperator) ")
-        } else {
-            delegate?.displayAlert(message: "Un operateur est déjà mis !")
+        guard !expressionHaveResult else {
+            delegate?.displayAlert(message: "L'expression a déjà un résultat. Veuillez entrer un nouveau calcul.")
+            return
         }
+        
+        guard !text.isEmpty else {
+            delegate?.displayAlert(message: "Veuillez entrer un chiffre avant l'opérateur.")
+            return
+        }
+        
+        guard canAddOperator else {
+            delegate?.displayAlert(message: "Un opérateur est déjà en place !")
+            return
+        }
+        
+        text.append(" \(mathOperator) ")
     }
     
     /// Handles the tap event on the equal button
@@ -100,15 +115,19 @@ final class Calculator {
             return
         }
         
+        guard !expressionDivideZero else {
+            delegate?.displayAlert(message: "Vous ne pouvez pas diviser un chiffre par 0, tappez un nouveau calcul")
+            text = ""
+            return
+        }
+        
         guard !expressionHaveResult else {
-            delegate?.displayAlert(message: "L'expression à deja un résultat, tappez un nouveau calcule")
+            delegate?.displayAlert(message: "L'expression a déjà un résultat. Veuillez entrer un nouveau calcul.")
             return
         }
         
         // Iterate over operations while an operand still here
         while operationsToReduce.count > 1 {
-            print(operationsToReduce)
-            
             operationsToReduce = priorityCalculate(expression: operationsToReduce)
             if operationsToReduce.count > 2 {
                 if let result = formCalculation(expression: operationsToReduce, index: 1) {

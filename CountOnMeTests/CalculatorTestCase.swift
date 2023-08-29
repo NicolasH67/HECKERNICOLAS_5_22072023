@@ -13,120 +13,167 @@ import XCTest
  A test case class for testing the Calculator class functionality.
  */
 final class CalculatorTestCase: XCTestCase {
-    
-    //MARK: - Properties
-    
-    var calculator: Calculator!
-    var spy: CalculatorDelegateSpy!
-    
-    //MARK: - Override
-    
-    override func setUp() {
-        super.setUp()
-        calculator = Calculator()
-        spy = CalculatorDelegateSpy()
-        calculator.delegate = spy
-    }
-    
     //MARK: - Methode
     
-    func simpleCalcul(operand: String, result: Double) {
-        calculator.tappedNumberButton("1")
-        calculator.tappedNumberButton("5")
-        calculator.tappedOperatorButton(operand)
-        calculator.tappedNumberButton("5")
-        calculator.tappedEqualButton()
-        
-        XCTAssertEqual(calculator.text, "15 \(operand) 5 = \(result)")
+    private func makeSUT() -> (sut: Calculator, spy: CalculatorDelegateSpy) {
+        let spy = CalculatorDelegateSpy()
+        let sut = Calculator()
+        sut.delegate = spy
+        return (sut, spy)
     }
-    
-    func complexeCalcul(operand: String, result: Double) {
-        calculator.tappedNumberButton("5")
-        calculator.tappedOperatorButton("+")
-        calculator.tappedNumberButton("5")
-        calculator.tappedOperatorButton(operand)
-        calculator.tappedNumberButton("5")
-        calculator.tappedEqualButton()
-        
-        XCTAssertEqual(calculator.text, "5 + 5 \(operand) 5 = \(result)")
-    }
+
+    // MARK: - Test
     
     func testCalculate15Plus5_WhenAdding_ThenResultIs20() {
-        simpleCalcul(operand: "+", result: 20.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("1")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "15 + 5 = 20.0")
     }
 
     func testCalculate15Subtract5_WhenSubtracting_ThenResultIs10() {
-        simpleCalcul(operand: "-", result: 10.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("1")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("-")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "15 - 5 = 10.0")
     }
 
     func testCalculate15Multiply5_WhenMultiplying_ThenResultIs75() {
-        simpleCalcul(operand: "x", result: 75.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("1")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("x")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "15 x 5 = 75.0")
     }
 
     func testCalculate15Divide5_WhenDividing_ThenResultIs3() {
-        simpleCalcul(operand: "÷", result: 3.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("1")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("÷")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "15 ÷ 5 = 3.0")
     }
 
     func testCalculate5Plus5Multiply5_WhenCorrectlyCalculating_ThenResultIs30() {
-        complexeCalcul(operand: "x", result: 30.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("x")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "5 + 5 x 5 = 30.0")
     }
 
     func testCalculate5Plus5Divide5_WhenCorrectlyCalculating_ThenResultIs6() {
-        complexeCalcul(operand: "÷", result: 6.0)
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("÷")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        XCTAssertEqual(spy.text, "5 + 5 ÷ 5 = 6.0")
     }
 
     func testCalculationWithDivisionAndMultiplication_WhenCorrectlyCalculating_ThenResultIs20() {
-        calculator.tappedNumberButton("5")
-        calculator.tappedOperatorButton("+")
-        calculator.tappedNumberButton("6")
-        calculator.tappedOperatorButton("÷")
-        calculator.tappedNumberButton("2")
-        calculator.tappedOperatorButton("x")
-        calculator.tappedNumberButton("5")
-        calculator.tappedEqualButton()
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("6")
+        sut.tappedOperatorButton("÷")
+        sut.tappedNumberButton("2")
+        sut.tappedOperatorButton("x")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
     
-        XCTAssertEqual(calculator.text, "5 + 6 ÷ 2 x 5 = 20.0")
+        XCTAssertEqual(spy.text, "5 + 6 ÷ 2 x 5 = 20.0")
     }
     
     func testGivenHaveExpression_WhenWantReset_ThenTextIsReset() {
-        calculator.tappedNumberButton("2")
-        calculator.tappedOperatorButton("x")
-        calculator.tappedNumberButton("5")
-        calculator.tappedResetButton()
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("2")
+        sut.tappedOperatorButton("x")
+        sut.tappedNumberButton("5")
+        sut.tappedResetButton()
         
-        XCTAssertEqual(calculator.text, "")
+        XCTAssertEqual(spy.text, "")
     }
 
     func testGivenInvalidExpression_WhenEvaluatingExpression_ThenErrorMessageDisplayed() {
-        calculator.text = "5 + 5 +"
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedEqualButton()
         
-        calculator.tappedEqualButton()
-        
-        XCTAssertEqual(spy.displayedMessages, ["le calcul n'est pas correct"])
+        XCTAssertEqual(spy.message, "le calcul n'est pas correct")
     }
 
     func testGivenIncompleteExpression_WhenEvaluatingExpression_ThenIncompleteExpressionMessageDisplayed() {
-        calculator.tappedNumberButton("6")
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("6")
         
-        calculator.tappedEqualButton()
+        sut.tappedEqualButton()
         
-        XCTAssertEqual(spy.displayedMessages, ["le calcul n'est pas complet"])
+        XCTAssertEqual(spy.message, "le calcul n'est pas complet")
     }
 
     func testGivenExpressionWithResult_WhenEvaluatingExpression_ThenExistingResultMessageDisplayed() {
-        calculator.text = "5 + 3 = 8"
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
         
-        calculator.tappedEqualButton()
+        sut.tappedEqualButton()
         
-        XCTAssertEqual(spy.displayedMessages, ["L'expression à deja un résultat, tappez un nouveau calcule"])
+        XCTAssertEqual(spy.message, "L'expression a déjà un résultat. Veuillez entrer un nouveau calcul.")
     }
 
     func testGivenOperatorAlreadyPresent_WhenAddingOperator_ThenErrorMessageDisplayed() {
-        calculator.tappedOperatorButton("+")
-        calculator.tappedOperatorButton("-")
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedOperatorButton("-")
 
-        XCTAssertEqual(calculator.text, " + ")
+        XCTAssertEqual(spy.text, "5 + ")
 
-        XCTAssertEqual(spy.displayedMessages, ["Un operateur est déjà mis !"])
+        XCTAssertEqual(spy.message, "Un opérateur est déjà en place !")
+    }
+    
+    func testGivenTextIsEmpty_WhenAddingOperator_ThenErrorMessageDisplayed() {
+        let (sut, spy) = makeSUT()
+        sut.tappedOperatorButton("x")
+        
+        XCTAssertEqual(spy.message, "Veuillez entrer un chiffre avant l'opérateur.")
+    }
+    
+    func testGivenExpressionHaveResult_WhenAddingOperator_ThenErrorMessageDisplayed() {
+        let (sut, spy) = makeSUT()
+        sut.tappedNumberButton("1")
+        sut.tappedNumberButton("5")
+        sut.tappedOperatorButton("+")
+        sut.tappedNumberButton("5")
+        sut.tappedEqualButton()
+        
+        sut.tappedOperatorButton("+")
+        
+        XCTAssertEqual(spy.message, "L'expression a déjà un résultat. Veuillez entrer un nouveau calcul.")
     }
 }

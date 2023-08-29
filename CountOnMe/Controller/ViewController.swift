@@ -99,15 +99,3 @@ extension ViewController: CalculatorDelegate {
         present(alertVC, animated: true)
     }
 }
-
-class CalculatorDelegateSpy: CalculatorDelegate {
-    func updateDisplay(text: String) {
-        print("ok")
-    }
-    
-    private(set) var displayedMessages: [String] = []
-
-    func displayAlert(message: String) {
-        displayedMessages.append(message)
-    }
-}
